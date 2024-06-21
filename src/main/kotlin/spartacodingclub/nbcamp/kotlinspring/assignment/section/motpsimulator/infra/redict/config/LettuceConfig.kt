@@ -22,8 +22,8 @@ class LettuceConfig (
         LettuceConnectionFactory(redisProperties.host, redisProperties.port)
 
     @Bean
-    fun redisTemplate(redisConnectionFactory: RedisConnectionFactory): RedisTemplate<String, String> =
-        RedisTemplate<String, String>().apply {
+    fun redisTemplate(redisConnectionFactory: RedisConnectionFactory): RedisTemplate<String, Any> =
+        RedisTemplate<String, Any>().apply {
             this.connectionFactory = redisConnectionFactory
 
             this.keySerializer = StringRedisSerializer()
