@@ -2,7 +2,6 @@ package spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.do
 
 import jakarta.persistence.*
 import spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.domain.auth.dto.request.SignUpRequest
-import java.util.*
 
 @Entity
 @Table(name = "member")
@@ -17,11 +16,10 @@ class Member (
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null
+    lateinit var id: String
 
 
-    companion object {
-    }
+    companion object
 }
 
 fun Member.Companion.from(request: SignUpRequest) = Member (

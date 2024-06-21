@@ -2,6 +2,7 @@ package spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.do
 
 data class MemberOtpResponse(
 
+    val id: String,
     val username: String,
     val otp: String
 )

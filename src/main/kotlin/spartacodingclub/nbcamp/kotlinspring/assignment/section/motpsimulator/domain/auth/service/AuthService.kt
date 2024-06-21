@@ -1,6 +1,5 @@
 package spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.domain.auth.service
 
-import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Service
 import spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.domain.auth.dto.request.SignInPrimaryRequest
 import spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.domain.auth.dto.request.SignInSecondaryRequest
@@ -40,41 +39,41 @@ class AuthService (
         if(request.password != targetMember.password)
             throw IllegalArgumentException("Password does not match")
 
-        // TODO: Implement otp creation here
-        val code = String.format("%06d", Random.nextInt(1000000))
-        memberOtpRepository.addOtpByUsername(targetMember.username, code)
+        val code = String.format("%06d",
+            Random.nextInt(1000000))
+        memberOtpRepository.addOtpById(targetMember.id, code)
 
         return MemberOtpResponse(
+            id = targetMember.id,
             username = targetMember.username,
             otp = code
         )
     }
 
-    fun signInSecondary(request: SignInSecondaryRequest): String {
+    fun signInSecondary(request: SignInSecondaryRequest): MemberResponse {
 
         val targetMember = memberRepository.findByUsername(request.username)
             ?: throw IllegalArgumentException("Member does not exist")
+        val targetMemberOtp = memberOtpRepository.getOtpById(targetMember.id)
+            ?: throw IllegalArgumentException("Member has to sign in first to get OTP code")
 
-        val targetOtp = memberOtpRepository.getMemberOtpByUsername(targetMember.username)
-            ?: throw IllegalArgumentException("Member does not exist")
+        if (targetMemberOtp != request.otp)
+            throw IllegalArgumentException("OTP does not match")
 
-        if (targetOtp != request.otp)
-            throw IllegalArgumentException("Otp does not match")
-
-        memberOtpRepository.removeOtpByUsername(targetMember.username)
-        return "A u t h o r i z e d"
+        memberOtpRepository.removeOtpById(targetMember.id)
+        return MemberResponse.from(targetMember)
     }
 
     fun refreshOtps() {
 
-        val members = memberOtpRepository.getMembersList()
-        val otps: MutableMap<String, String> = mutableMapOf()
+        val memberIds = memberOtpRepository.memberIds
+        val newOtps: MutableMap<String, String> = mutableMapOf()
 
-        for (each in members)
+        for (each in memberIds)
             String.format("%06d", Random.nextInt(1000000)).let {
-                otps.put("member_otp:$each", it)
+                newOtps.put(each, it)
             }
 
-        memberOtpRepository.refreshAllOtps(otps)
+        memberOtpRepository.updateAllOtps(newOtps)
     }
 }

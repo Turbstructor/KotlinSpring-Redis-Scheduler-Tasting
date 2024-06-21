@@ -3,7 +3,6 @@ package spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.do
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Repository
 import java.time.Duration
-import kotlin.random.Random
 
 @Repository
 class MemberOtpRepository (
@@ -11,46 +10,56 @@ class MemberOtpRepository (
     private val redisTemplate: RedisTemplate<String, String>
 ) {
 
-    fun addOtpByUsername(username: String, otp: String) {
+    private val memberEntityName = "member"
+    private val memberOtpEntityName = "member_otp"
 
-        addUsername(username)
+    fun addOtpById(id: String, otp: String) {
+
+        this.addMemberById(id)
         redisTemplate.opsForValue()
-            .set("member_otp:$username", otp, Duration.ofMinutes(10))
+            .set("${memberOtpEntityName}:${id}", otp, Duration.ofMinutes(10))
     }
 
 
-    private fun addUsername(username: String) {
+    fun getOtpById(id: String): String? =
+        redisTemplate.opsForValue().get("${memberOtpEntityName}:${id}")
+
+
+    val memberIds: Set<String>
+        get() = redisTemplate.opsForSet().members(memberEntityName)!!
+
+
+    fun updateAllOtps(newOtps: MutableMap<String, String>) {
+
+        for (each in newOtps.keys) {
+            if (this.existsAsOtpById(each))
+                redisTemplate.opsForValue().set(
+                    "${memberOtpEntityName}:${each}", newOtps[each]!!
+                )
+            else
+                this.removeMemberFromSetById(each)
+        }
+    }
+
+
+    fun removeOtpById(id: String) {
+        redisTemplate.delete("${memberOtpEntityName}:${id}")
+        this.removeMemberFromSetById(id)
+    }
+
+
+    private fun removeMemberFromSetById(id: String) =
+        redisTemplate.opsForSet().remove(memberEntityName, id)
+
+
+    private fun existsAsOtpById(id: String): Boolean =
+        redisTemplate.opsForValue().get("${memberOtpEntityName}:${id}") != null
+
+
+    private fun addMemberById(id: String) {
         redisTemplate.opsForSet()
-            .add("members", username)
+            .add(memberEntityName, id)
     }
 
 
-    fun getMemberOtpByUsername(username: String): String? =
-        redisTemplate.opsForValue().get("member_otp:$username")
-
-
-    fun getMembersList(): List<String> =
-        redisTemplate.opsForSet().members("members")!!.toList()
-
-
-    fun refreshAllOtps(otps: MutableMap<String, String>) {
-
-        redisTemplate.opsForValue().multiSet(otps)
-
-        // Remove obsolete members from 'members' since they need to re-issue otp
-        for (each in (otps.keys - getMembersList().toMutableSet()))
-            redisTemplate.opsForSet().pop(each)
-
-        redisTemplate.opsForValue().multiSetIfAbsent(otps)
-    }
-
-
-    fun removeOtpByUsername(username: String) {
-        redisTemplate.delete("member_otp:$username")
-    }
-
-
-    private fun removeMemberByUsername(username: String) {
-        redisTemplate.opsForSet().pop("member_otp:$username")
-    }
 }

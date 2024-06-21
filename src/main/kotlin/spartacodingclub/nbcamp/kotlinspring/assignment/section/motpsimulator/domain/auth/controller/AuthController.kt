@@ -31,13 +31,14 @@ class AuthController (
             .body(authService.signInPrimary(request))
 
     @PostMapping("/sign-in-secondary")
-    fun signInSecondary(@RequestBody request: SignInSecondaryRequest): ResponseEntity<String> =
+    fun signInSecondary(@RequestBody request: SignInSecondaryRequest): ResponseEntity<MemberResponse> =
         ResponseEntity
             .status(HttpStatus.OK)
             .body(authService.signInSecondary(request))
 
+
     @Scheduled(cron = "0 * * * * *")
-    fun refreshOtps() {
+    fun refreshOtps() =
         authService.refreshOtps()
-    }
+
 }

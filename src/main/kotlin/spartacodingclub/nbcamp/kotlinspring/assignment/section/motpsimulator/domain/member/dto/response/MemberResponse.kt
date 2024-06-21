@@ -4,6 +4,7 @@ import spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.dom
 
 data class MemberResponse(
 
+    val id: String,
     val username: String
 ) {
 
@@ -11,6 +12,7 @@ data class MemberResponse(
 
         fun from(member: Member): MemberResponse =
             MemberResponse (
+                id = member.id,
                 username = member.username
             )
     }
