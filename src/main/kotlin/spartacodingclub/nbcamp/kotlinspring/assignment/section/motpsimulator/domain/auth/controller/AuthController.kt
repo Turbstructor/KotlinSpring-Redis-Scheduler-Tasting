@@ -2,6 +2,7 @@ package spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.do
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.bind.annotation.*
 import spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.domain.auth.dto.request.SignInPrimaryRequest
 import spartacodingclub.nbcamp.kotlinspring.assignment.section.motpsimulator.domain.auth.dto.request.SignInSecondaryRequest
@@ -35,4 +36,8 @@ class AuthController (
             .status(HttpStatus.OK)
             .body(authService.signInSecondary(request))
 
+    @Scheduled(cron = "0 * * * * *")
+    fun refreshOtps() {
+        authService.refreshOtps()
+    }
 }
